@@ -18,6 +18,32 @@ export default function PrivyForm({ code, appId }: { code: string; appId: string
   )
 }
 
+function Spinner({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      className="animate-spin"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+      <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function StatusLine({ children, tone = 'muted' }: { children: React.ReactNode; tone?: 'muted' | 'accent' }) {
+  const color = tone === 'accent' ? 'text-accent' : 'text-muted'
+  return (
+    <div className={`flex items-center gap-2 text-text ${color}`}>
+      <Spinner />
+      <span>{children}</span>
+    </div>
+  )
+}
+
 function Inner({ code }: { code: string }) {
   const { ready, getAccessToken } = usePrivy()
   const [error, setError] = useState<string | null>(null)
@@ -49,26 +75,37 @@ function Inner({ code }: { code: string }) {
     onError: err => setError(String(err)),
   })
 
-  if (!ready) return <p>Loading…</p>
+  if (!ready) return <StatusLine>Loading…</StatusLine>
 
   if (error) {
     return (
-      <div>
-        <p>Sign-in failed.</p>
-        <p style={{ color: '#c00' }}>{error}</p>
-        <p>Close this tab and re-run <code>claudenomics login</code>.</p>
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-border bg-surface-card p-5">
+          <p className="text-text font-medium mb-1">Sign-in failed</p>
+          <p className="text-caption text-muted break-words">{error}</p>
+        </div>
+        <p className="text-caption text-muted">
+          Close this tab and re-run{' '}
+          <code className="rounded-md bg-surface-card px-1.5 py-0.5 text-primary">claudenomics login</code>.
+        </p>
       </div>
     )
   }
 
-  if (busy) return <p>Finishing sign-in…</p>
+  if (busy) return <StatusLine tone="accent">Finishing sign-in…</StatusLine>
 
   return (
-    <button
-      onClick={() => login()}
-      style={{ padding: '0.75rem 1.25rem', fontSize: 16, cursor: 'pointer' }}
-    >
-      Sign in
-    </button>
+    <div className="space-y-4">
+      <button
+        type="button"
+        onClick={() => login()}
+        className="group inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-[10px] bg-accent px-7 text-[18px] font-semibold text-surface transition-colors hover:bg-accent/90 cursor-pointer"
+      >
+        Continue with Privy
+      </button>
+      <p className="text-caption text-dim text-center">
+        Wallet · Email · Google
+      </p>
+    </div>
   )
 }
