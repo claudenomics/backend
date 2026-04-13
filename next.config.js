@@ -16,6 +16,13 @@ const CSP = [
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@claudenomics/attestation', '@claudenomics/auth', '@claudenomics/privy', '@claudenomics/receipts', '@claudenomics/store'],
+  webpack: config => {
+    config.resolve.extensionAlias = {
+      ...(config.resolve.extensionAlias ?? {}),
+      '.js': ['.ts', '.tsx', '.js'],
+    }
+    return config
+  },
   async rewrites() {
     return [
       { source: '/.well-known/jwks.json', destination: '/api/well-known/jwks.json' },
