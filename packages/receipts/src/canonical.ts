@@ -19,6 +19,7 @@ export type SignedReceipt = {
   sig: string
   pubkey: string
   compose_hash: string
+  mode: string
 }
 
 function requireSafeInt(name: string, n: number): number {
@@ -42,7 +43,7 @@ function pushUint64(parts: Buffer[], n: number): void {
   parts.push(b)
 }
 
-export function canonicalize(r: Receipt): Buffer {
+export function canonicalize(r: Receipt, composeHash: string, mode: string): Buffer {
   const input = requireSafeInt('input_tokens', r.input_tokens)
   const output = requireSafeInt('output_tokens', r.output_tokens)
   const ts = requireSafeInt('ts', r.ts)
@@ -55,11 +56,13 @@ export function canonicalize(r: Receipt): Buffer {
   pushUint64(parts, input)
   pushUint64(parts, output)
   pushUint64(parts, ts)
+  pushString(parts, composeHash)
+  pushString(parts, mode)
   return Buffer.concat(parts)
 }
 
-export function digest(receipt: Receipt): Buffer {
-  return createHash('sha256').update(canonicalize(receipt)).digest()
+export function digest(receipt: Receipt, composeHash: string, mode: string): Buffer {
+  return createHash('sha256').update(canonicalize(receipt, composeHash, mode)).digest()
 }
 
 const HEX_RE = /^[0-9a-fA-F]+$/
@@ -72,7 +75,7 @@ export function verifySignature(signed: SignedReceipt): boolean {
   const prefix = signed.pubkey.slice(0, 2).toLowerCase()
   if (prefix !== '02' && prefix !== '03') return false
   try {
-    return verify(signed.sig, digest(signed.receipt), signed.pubkey)
+    return verify(signed.sig, digest(signed.receipt, signed.compose_hash, signed.mode), signed.pubkey)
   } catch {
     return false
   }

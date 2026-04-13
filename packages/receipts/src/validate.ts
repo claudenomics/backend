@@ -19,6 +19,7 @@ export const signedReceiptSchema = z.object({
   sig: hex(128),
   pubkey: hex(66),
   compose_hash: hex(64),
+  mode: z.enum(['production', 'simulator']),
 })
 
 export type SignedReceiptBody = z.infer<typeof signedReceiptSchema>
