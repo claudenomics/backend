@@ -1,0 +1,15 @@
+{
+  "name": "@claudenomics/receipts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@claudenomics/store": "workspace:*",
+    "@noble/secp256k1": "^2.1.0",
+    "drizzle-orm": "^0.36.4",
+    "zod": "^3.23.8"
+  }
+}

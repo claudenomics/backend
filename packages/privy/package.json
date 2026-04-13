@@ -1,0 +1,13 @@
+{
+  "name": "@claudenomics/privy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@claudenomics/auth": "workspace:*",
+    "@privy-io/server-auth": "^1.30.0"
+  }
+}
