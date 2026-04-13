@@ -8,15 +8,42 @@ export const dynamic = 'force-dynamic'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
-function errorPage(code: string) {
+const errorMessages: Record<string, string> = {
+  misconfigured: 'The service is not configured correctly. Contact support if this persists.',
+  invalid_request: 'This login link is malformed or has expired.',
+  invalid_callback: 'The callback URL on this link is not allowed.',
+  rate_limited: 'Too many attempts from this network. Try again in a minute.',
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main style={{ fontFamily: 'system-ui', padding: '2rem', maxWidth: 560 }}>
-      <h1>Login error</h1>
-      <p>
-        This login link is invalid. Re-run <code>claudenomics login</code> from your terminal.
-      </p>
-      <p style={{ color: '#888', fontSize: 12 }}>code: {code}</p>
+    <main className="min-h-screen w-full flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-md">{children}</div>
     </main>
+  )
+}
+
+function Brand() {
+  return (
+    <div className="flex items-center gap-2 mb-10">
+      <div className="size-6 rounded-md bg-accent" />
+      <span className="text-[15px] font-semibold tracking-tight">claudenomics</span>
+    </div>
+  )
+}
+
+function errorPage(code: string) {
+  const message = errorMessages[code] ?? 'This login link is invalid.'
+  return (
+    <Shell>
+      <Brand />
+      <h1 className="text-h1 font-semibold tracking-tight mb-3">Login error</h1>
+      <p className="text-text text-muted mb-6">{message}</p>
+      <p className="text-caption text-muted">
+        Re-run <code className="rounded-md bg-surface-card px-1.5 py-0.5 text-primary">claudenomics login</code> from your terminal.
+      </p>
+      <p className="mt-10 text-caption text-dim">code: {code}</p>
+    </Shell>
   )
 }
 
@@ -43,10 +70,13 @@ export default async function CliAuthPage({ searchParams }: { searchParams: Sear
   })
 
   return (
-    <main style={{ fontFamily: 'system-ui', padding: '2rem', maxWidth: 560 }}>
-      <h1>Sign in to claudenomics</h1>
-      <p>Completing this will return you to your terminal.</p>
+    <Shell>
+      <Brand />
+      <h1 className="text-h1 font-semibold tracking-tight mb-3">Sign in to claudenomics</h1>
+      <p className="text-text text-muted mb-10">
+        Completing this will return you to your terminal.
+      </p>
       <PrivyForm code={code} appId={privyAppId} />
-    </main>
+    </Shell>
   )
 }
