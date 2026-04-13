@@ -1,0 +1,16 @@
+{
+  "name": "@claudenomics/attestation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@claudenomics/auth": "workspace:*",
+    "@claudenomics/store": "workspace:*",
+    "@phala/dcap-qvl": "^0.3.9",
+    "drizzle-orm": "^0.36.4",
+    "zod": "^3.23.8"
+  }
+}

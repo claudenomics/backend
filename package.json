@@ -1,0 +1,41 @@
+{
+  "name": "claudenomics-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "keygen": "node scripts/keygen.mjs"
+  },
+  "dependencies": {
+    "@claudenomics/attestation": "workspace:*",
+    "@claudenomics/auth": "workspace:*",
+    "@claudenomics/privy": "workspace:*",
+    "@claudenomics/receipts": "workspace:*",
+    "@claudenomics/store": "workspace:*",
+    "@privy-io/react-auth": "^2.25.0",
+    "next": "^14.2.33",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "drizzle-kit": "^0.30.0",
+    "jose": "^5.9.6",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@10.27.0+sha512.72d699da16b1179c14ba9e64dc71c9a40988cbdc65c264cb0e489db7de917f20dcf4d64d8723625f2969ba52d4b7e2a1170682d9ac2a5dcaeaab732b7e16f04a"
+}
