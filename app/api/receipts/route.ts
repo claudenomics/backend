@@ -55,6 +55,10 @@ export async function POST(req: Request) {
   const signed = parsed.data
 
   if (signed.receipt.wallet !== wallet) return errorResponse('wallet_mismatch')
+  if (signed.mode !== 'production') {
+    log.warn({ event: 'non_production_receipt', mode: signed.mode })
+    return errorResponse('non_production_receipt')
+  }
 
   const claimedHash = signed.compose_hash.toLowerCase()
   if (!ALLOWED_COMPOSE_HASHES.has(claimedHash)) {

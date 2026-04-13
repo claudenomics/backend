@@ -17,6 +17,7 @@ export type ErrorCode =
   | 'pubkey_mismatch'
   | 'collateral_unavailable'
   | 'unattested_pubkey'
+  | 'non_production_receipt'
   | 'rate_limited'
   | 'not_implemented'
   | 'internal'
@@ -40,6 +41,7 @@ const STATUS: Record<ErrorCode, number> = {
   pubkey_mismatch: 401,
   collateral_unavailable: 503,
   unattested_pubkey: 403,
+  non_production_receipt: 403,
   rate_limited: 429,
   not_implemented: 501,
   internal: 500,
