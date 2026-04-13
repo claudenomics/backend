@@ -1,11 +1,12 @@
 import {
   errorResponse,
+  issueRefreshToken,
   reqLogger,
   signToken,
   tokenBodySchema,
   verifyChallenge,
 } from '@claudenomics/auth'
-import { clientIp, consume, hit } from '@claudenomics/store'
+import { clientIp, consume, hit, refreshTokenStore } from '@claudenomics/store'
 import { randomUUID } from 'node:crypto'
 
 export const runtime = 'nodejs'
@@ -45,10 +46,17 @@ export async function POST(req: Request) {
       wallet: row.wallet,
       email: row.email ?? undefined,
     })
+    const refresh = await issueRefreshToken(refreshTokenStore, {
+      sub: row.privyDid,
+      wallet: row.wallet,
+      email: row.email,
+    })
     log.info({ event: 'token_issued', sub: row.privyDid })
     return Response.json({
       token,
       expires_at: expiresAt,
+      refresh_token: refresh.token,
+      refresh_expires_at: refresh.expiresAt.getTime(),
       wallet: row.wallet,
       user_id: row.privyDid,
       email: row.email ?? undefined,
