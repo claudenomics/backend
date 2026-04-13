@@ -7,6 +7,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  uuid,
 } from 'drizzle-orm/pg-core'
 
 export const authCodes = pgTable(
@@ -73,6 +74,30 @@ export const walletTotals = pgTable('wallet_totals', {
     .notNull()
     .default(sql`now()`),
 })
+
+export const refreshTokens = pgTable(
+  'refresh_tokens',
+  {
+    id: uuid('id').primaryKey(),
+    tokenHash: text('token_hash').notNull().unique(),
+    familyId: uuid('family_id').notNull(),
+    sub: text('sub').notNull(),
+    wallet: text('wallet').notNull(),
+    email: text('email'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    replacedBy: uuid('replaced_by'),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  },
+  t => ({
+    familyIdx: index('refresh_tokens_family_idx').on(t.familyId),
+    subIdx: index('refresh_tokens_sub_idx').on(t.sub),
+    expiresIdx: index('refresh_tokens_expires_at_idx').on(t.expiresAt),
+  }),
+)
 
 export const enclaveAttestations = pgTable(
   'enclave_attestations',
