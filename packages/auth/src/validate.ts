@@ -19,3 +19,13 @@ export const privyAssociateBodySchema = z.object({
   privyAccessToken: z.string().min(1),
 })
 export type PrivyAssociateBody = z.infer<typeof privyAssociateBodySchema>
+
+export const refreshBodySchema = z.object({
+  refresh_token: z.string().regex(/^crn_refresh_[A-Za-z0-9_-]{43}$/),
+})
+export type RefreshBody = z.infer<typeof refreshBodySchema>
+
+export const revokeBodySchema = z.object({
+  refresh_token: z.string().regex(/^crn_refresh_[A-Za-z0-9_-]{43}$/),
+})
+export type RevokeBody = z.infer<typeof revokeBodySchema>
