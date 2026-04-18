@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { cliAuthQuerySchema, isValidCallback } from '@claudenomics/auth'
 import { clientIp, createCode, hit } from '@claudenomics/store'
 import PrivyForm from './privy-form'
+import { ClaudenomicsLogo } from './logo'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,20 +16,33 @@ const errorMessages: Record<string, string> = {
   rate_limited: 'Too many attempts from this network. Try again in a minute.',
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Toolbar() {
   return (
-    <main className="min-h-screen w-full flex items-center justify-center px-6 py-16">
-      <div className="w-full max-w-md">{children}</div>
-    </main>
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-surface/70">
+      <div className="flex items-center h-[72px] px-6 max-w-[1280px] mx-auto">
+        <a
+          href="https://claudenomics.xyz"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="claudenomics home"
+          className="font-inter font-bold text-[20px] text-primary inline-flex items-center gap-2 rounded-[6px] touch-manipulation transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-surface"
+        >
+          <ClaudenomicsLogo size={24} />
+          <span translate="no">claudenomics</span>
+        </a>
+      </div>
+    </nav>
   )
 }
 
-function Brand() {
+function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 mb-10">
-      <div className="size-6 rounded-md bg-accent" />
-      <span className="text-[15px] font-semibold tracking-tight">claudenomics</span>
-    </div>
+    <>
+      <Toolbar />
+      <main className="min-h-[calc(100svh-72px)] flex items-center justify-center px-5 py-16">
+        <div className="w-full max-w-[480px] flex flex-col gap-10">{children}</div>
+      </main>
+    </>
   )
 }
 
@@ -36,13 +50,20 @@ function errorPage(code: string) {
   const message = errorMessages[code] ?? 'This login link is invalid.'
   return (
     <Shell>
-      <Brand />
-      <h1 className="text-h1 font-semibold tracking-tight mb-3">Login error</h1>
-      <p className="text-text text-muted mb-6">{message}</p>
-      <p className="text-caption text-muted">
-        Re-run <code className="rounded-md bg-surface-card px-1.5 py-0.5 text-primary">claudenomics login</code> from your terminal.
+      <div className="flex flex-col gap-5">
+        <h1 className="text-[48px] leading-[1.05] tracking-tight font-semibold text-balance">
+          login error
+        </h1>
+        <p className="text-[24px] leading-[1.35] font-medium text-muted text-pretty">{message}</p>
+      </div>
+      <p className="text-[20px] leading-[1.5] text-muted text-pretty">
+        Re-run{' '}
+        <code translate="no" className="font-mono text-accent">
+          claudenomics login
+        </code>{' '}
+        in your terminal.
       </p>
-      <p className="mt-10 text-caption text-dim">code: {code}</p>
+      <p className="text-[14px] leading-[1.5] text-dim">code: {code}</p>
     </Shell>
   )
 }
@@ -71,12 +92,21 @@ export default async function CliAuthPage({ searchParams }: { searchParams: Sear
 
   return (
     <Shell>
-      <Brand />
-      <h1 className="text-h1 font-semibold tracking-tight mb-3">Sign in to claudenomics</h1>
-      <p className="text-text text-muted mb-10">
-        Completing this will return you to your terminal.
-      </p>
+      <div className="flex flex-col gap-5">
+        <h1 className="text-[48px] leading-[1.05] tracking-tight font-semibold text-balance">
+          sign in
+        </h1>
+        <p className="text-[24px] leading-[1.35] font-medium text-muted text-pretty">
+          Connect your wallet to link the CLI on this machine.
+        </p>
+      </div>
+
       <PrivyForm code={code} appId={privyAppId} />
+
+      <p className="text-[14px] leading-[1.5] text-muted text-pretty">
+        You&rsquo;ll be returned to your terminal once sign-in completes. Tokens are scoped to this
+        device.
+      </p>
     </Shell>
   )
 }
