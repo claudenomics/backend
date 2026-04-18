@@ -12,6 +12,10 @@ export const metadata = {
   robots: { index: false, follow: false },
 }
 
+export const viewport = {
+  themeColor: '#000000',
+}
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
