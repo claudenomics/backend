@@ -3,6 +3,7 @@ import { cliAuthQuerySchema, isValidCallback } from '@claudenomics/auth'
 import { clientIp, createCode, hit } from '@claudenomics/store'
 import PrivyForm from './privy-form'
 import { ClaudenomicsLogo } from './logo'
+import { CopyCode } from './copy-code'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -57,11 +58,7 @@ function errorPage(code: string) {
         <p className="text-[24px] leading-[1.35] font-medium text-muted text-pretty">{message}</p>
       </div>
       <p className="text-[20px] leading-[1.5] text-muted text-pretty">
-        Re-run{' '}
-        <code translate="no" className="font-mono text-accent">
-          claudenomics login
-        </code>{' '}
-        in your terminal.
+        Re-run <CopyCode>claudenomics login</CopyCode> in your terminal.
       </p>
       <p className="text-[14px] leading-[1.5] text-dim">code: {code}</p>
     </Shell>

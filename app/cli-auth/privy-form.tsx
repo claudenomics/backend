@@ -2,6 +2,7 @@
 
 import { PrivyProvider, useLogin, usePrivy } from '@privy-io/react-auth'
 import { useState } from 'react'
+import { CopyCode } from './copy-code'
 
 export default function PrivyForm({ code, appId }: { code: string; appId: string }) {
   return (
@@ -103,11 +104,7 @@ function Inner({ code }: { code: string }) {
         <p className="text-[20px] leading-[1.4] font-medium text-danger">Sign-in failed</p>
         <p className="text-[14px] leading-[1.5] text-muted break-words">{error}</p>
         <p className="text-[14px] leading-[1.5] text-muted text-pretty">
-          Close this tab and re-run{' '}
-          <code translate="no" className="font-mono text-accent">
-            claudenomics login
-          </code>
-          .
+          Close this tab and re-run <CopyCode>claudenomics login</CopyCode>.
         </p>
       </div>
     )
