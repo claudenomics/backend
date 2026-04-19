@@ -1,5 +1,6 @@
 import { errorResponse, reqLogger } from '@claudenomics/auth'
-import { getLeagueById } from '@claudenomics/leagues'
+import { getLeagueById, getLeagueProgress } from '@claudenomics/leagues'
+import { rankByWallet } from '@claudenomics/receipts'
 import { clientIp, hit } from '@claudenomics/store'
 import { getSocialAccountsByUserId, getUserByProfileIdentifier } from '@claudenomics/users'
 import { randomUUID } from 'node:crypto'
@@ -20,7 +21,15 @@ export async function GET(req: Request, { params }: { params: { handle: string }
     if (!user) return errorResponse('not_found')
     const socials = await getSocialAccountsByUserId(user.id)
     const league = user.currentLeagueId ? await getLeagueById(user.currentLeagueId) : null
-    return Response.json(publicProfileDto(user, socials, league?.slug ?? null))
+    const ranking = await rankByWallet(user.wallet)
+    const progress = await getLeagueProgress(ranking.tokens, user.currentLeagueId)
+    return Response.json(
+      publicProfileDto(user, socials, league?.slug ?? null, {
+        rank: ranking.rank,
+        totalBuilders: ranking.total,
+        progress,
+      }),
+    )
   } catch {
     log.error({ event: 'profile_public_failed', handle: identifier })
     return errorResponse('internal')

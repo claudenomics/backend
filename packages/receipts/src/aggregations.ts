@@ -265,3 +265,39 @@ export async function dailyBurnByWallet(
     .orderBy(asc(dayExpr))
   return rows.map(r => ({ date: r.date, tokens: Number(r.tokens) }))
 }
+
+export interface BuilderRanking {
+  rank: number | null
+  total: number
+  tokens: number
+}
+
+export async function rankByWallet(wallet: string): Promise<BuilderRanking> {
+  const result = await db.execute(sql`
+    WITH builder_burns AS (
+      SELECT r.wallet,
+             SUM(r.input_tokens + r.output_tokens)::bigint AS tokens
+      FROM receipts r
+      INNER JOIN users u ON u.wallet = r.wallet
+      GROUP BY r.wallet
+    )
+    SELECT
+      COUNT(*)::int AS total,
+      (SELECT tokens FROM builder_burns WHERE wallet = ${wallet})::bigint AS my_tokens,
+      COUNT(*) FILTER (
+        WHERE tokens > (SELECT tokens FROM builder_burns WHERE wallet = ${wallet})
+      )::int AS higher
+    FROM builder_burns
+  `)
+  const row = (result.rows?.[0] ?? { total: 0, my_tokens: null, higher: 0 }) as {
+    total: number
+    my_tokens: string | null
+    higher: number
+  }
+  const myTokens = row.my_tokens === null ? 0 : Number(row.my_tokens)
+  return {
+    rank: row.my_tokens === null ? null : row.higher + 1,
+    total: row.total,
+    tokens: myTokens,
+  }
+}
