@@ -57,12 +57,14 @@ export const receipts = pgTable(
     composeHash: text('compose_hash').notNull(),
     pubkey: text('pubkey').notNull(),
     sig: text('sig').notNull(),
+    attributedSquadId: uuid('attributed_squad_id'),
     receivedAt: timestamp('received_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
   },
   t => ({
     walletTsIdx: index('receipts_wallet_ts_idx').on(t.wallet, t.ts),
+    squadTsIdx: index('receipts_attributed_squad_ts_idx').on(t.attributedSquadId, t.ts),
   }),
 )
 
