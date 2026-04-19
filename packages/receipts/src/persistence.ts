@@ -4,7 +4,10 @@ import type { SignedReceipt } from './canonical.js'
 
 export type InsertResult = { inserted: boolean }
 
-export async function insertReceipt(signed: SignedReceipt): Promise<InsertResult> {
+export async function insertReceipt(
+  signed: SignedReceipt,
+  attributedSquadId: string | null = null,
+): Promise<InsertResult> {
   return db.transaction(async tx => {
     const [row] = await tx
       .insert(receipts)
@@ -19,6 +22,7 @@ export async function insertReceipt(signed: SignedReceipt): Promise<InsertResult
         composeHash: signed.compose_hash,
         pubkey: signed.pubkey,
         sig: signed.sig,
+        attributedSquadId,
       })
       .onConflictDoUpdate({
         target: receipts.responseId,
