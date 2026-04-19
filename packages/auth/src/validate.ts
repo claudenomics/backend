@@ -67,7 +67,7 @@ export const createSquadBodySchema = z
   .object({
     slug: squadSlugSchema,
     name: squadNameSchema,
-    twitter: squadTwitterSchema,
+    twitter: squadTwitterSchema.optional(),
   })
   .strict()
 export type CreateSquadBody = z.infer<typeof createSquadBodySchema>

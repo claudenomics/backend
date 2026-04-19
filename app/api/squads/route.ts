@@ -44,19 +44,22 @@ export async function POST(req: Request) {
       wallet: claims.wallet,
       email: claims.email,
     })
+    const twitterInput = parsed.data.twitter
+      ? {
+          provider: 'x',
+          providerUserId: parsed.data.twitter.provider_user_id,
+          handle: parsed.data.twitter.handle,
+          displayName: parsed.data.twitter.display_name ?? null,
+          bio: parsed.data.twitter.bio ?? null,
+          avatarUrl: parsed.data.twitter.avatar_url ?? null,
+        }
+      : undefined
     const { squad, defaultInvite } = await createSquadWithCaptain({
       slug: parsed.data.slug,
       name: parsed.data.name,
       captainUserId: user.id,
       defaultInviteCode: generateInviteCode(),
-      twitter: {
-        provider: 'x',
-        providerUserId: parsed.data.twitter.provider_user_id,
-        handle: parsed.data.twitter.handle,
-        displayName: parsed.data.twitter.display_name ?? null,
-        bio: parsed.data.twitter.bio ?? null,
-        avatarUrl: parsed.data.twitter.avatar_url ?? null,
-      },
+      twitter: twitterInput,
     })
     const memberships = await listActiveSquadMembershipsBySquadId(squad.id)
     const userIds = Array.from(new Set([squad.captainUserId, ...memberships.map(m => m.userId)]))
