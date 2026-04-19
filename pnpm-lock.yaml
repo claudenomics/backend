@@ -14,21 +14,36 @@ importers:
       '@claudenomics/auth':
         specifier: workspace:*
         version: link:packages/auth
+      '@claudenomics/leagues':
+        specifier: workspace:*
+        version: link:packages/db/leagues
+      '@claudenomics/oauth':
+        specifier: workspace:*
+        version: link:packages/oauth
       '@claudenomics/privy':
         specifier: workspace:*
         version: link:packages/privy
       '@claudenomics/receipts':
         specifier: workspace:*
         version: link:packages/receipts
+      '@claudenomics/squads':
+        specifier: workspace:*
+        version: link:packages/db/squads
       '@claudenomics/store':
         specifier: workspace:*
         version: link:packages/store
+      '@claudenomics/users':
+        specifier: workspace:*
+        version: link:packages/db/users
       '@privy-io/react-auth':
         specifier: ^2.25.0
         version: 2.25.0(@solana/kit@5.5.1(bufferutil@4.1.0)(typescript@5.9.3))(@solana/web3.js@1.98.4(bufferutil@4.1.0)(encoding@0.1.13)(typescript@5.9.3))(@types/react@18.3.28)(bs58@6.0.0)(bufferutil@4.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@18.3.1))(zod@3.25.76)
       '@tailwindcss/postcss':
         specifier: ^4.2.2
         version: 4.2.2
+      drizzle-orm:
+        specifier: ^0.36.4
+        version: 0.36.4(@types/pg@8.20.0)(@types/react@18.3.28)(pg@8.20.0)(react@18.3.1)
       next:
         specifier: ^14.2.33
         version: 14.2.35(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -44,6 +59,9 @@ importers:
       tailwindcss:
         specifier: ^4.2.2
         version: 4.2.2
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^22.10.1
@@ -99,6 +117,48 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.25.76
+
+  packages/db/leagues:
+    dependencies:
+      '@claudenomics/store':
+        specifier: workspace:*
+        version: link:../../store
+      drizzle-orm:
+        specifier: ^0.36.4
+        version: 0.36.4(@types/pg@8.20.0)(@types/react@18.3.28)(pg@8.20.0)(react@18.3.1)
+
+  packages/db/squads:
+    dependencies:
+      '@claudenomics/leagues':
+        specifier: workspace:*
+        version: link:../leagues
+      '@claudenomics/store':
+        specifier: workspace:*
+        version: link:../../store
+      '@claudenomics/users':
+        specifier: workspace:*
+        version: link:../users
+      drizzle-orm:
+        specifier: ^0.36.4
+        version: 0.36.4(@types/pg@8.20.0)(@types/react@18.3.28)(pg@8.20.0)(react@18.3.1)
+
+  packages/db/users:
+    dependencies:
+      '@claudenomics/leagues':
+        specifier: workspace:*
+        version: link:../leagues
+      '@claudenomics/store':
+        specifier: workspace:*
+        version: link:../../store
+      drizzle-orm:
+        specifier: ^0.36.4
+        version: 0.36.4(@types/pg@8.20.0)(@types/react@18.3.28)(pg@8.20.0)(react@18.3.1)
+
+  packages/oauth:
+    dependencies:
+      jose:
+        specifier: ^5.9.6
+        version: 5.10.0
 
   packages/privy:
     dependencies:
