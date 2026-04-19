@@ -1,5 +1,5 @@
 import { errorResponse, profilePatchBodySchema, reqLogger } from '@claudenomics/auth'
-import { getLeagueById } from '@claudenomics/leagues'
+import { getLeagueById, getLeagueProgress } from '@claudenomics/leagues'
 import { hit } from '@claudenomics/store'
 import {
   ensureUser,
@@ -36,7 +36,8 @@ export async function GET(req: Request) {
     })
     const socials = await getSocialAccountsByUserId(user.id)
     const leagueSlug = await resolveLeagueSlug(user.currentLeagueId)
-    return Response.json(meProfileDto(user, socials, leagueSlug))
+    const progress = await getLeagueProgress(user.id)
+    return Response.json(meProfileDto(user, socials, leagueSlug, progress))
   } catch (err) {
     if (err instanceof UserConflictError) return errorResponse('wallet_conflict')
     log.error({ event: 'profile_me_failed' })
@@ -74,7 +75,8 @@ export async function PATCH(req: Request) {
     })
     const socials = await getSocialAccountsByUserId(updated.id)
     const leagueSlug = await resolveLeagueSlug(updated.currentLeagueId)
-    return Response.json(meProfileDto(updated, socials, leagueSlug))
+    const progress = await getLeagueProgress(updated.id)
+    return Response.json(meProfileDto(updated, socials, leagueSlug, progress))
   } catch (err) {
     if (err instanceof UserConflictError) return errorResponse('wallet_conflict')
     log.error({ event: 'profile_patch_failed' })
