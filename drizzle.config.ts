@@ -6,6 +6,7 @@ export default {
     './packages/db/leagues/src/schema.ts',
     './packages/db/users/src/schema.ts',
     './packages/db/squads/src/schema.ts',
+    './packages/jobs/src/schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',
