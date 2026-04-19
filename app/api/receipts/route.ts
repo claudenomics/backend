@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     return Response.json({ status: inserted ? 'accepted' : 'duplicate' })
   } catch (err) {
     if (err instanceof AppError) return errorResponse(err.code)
-    log.error({ event: 'receipt_insert_failed' })
+    log.error({ event: 'receipt_insert_failed', err })
     return errorResponse('internal')
   }
 }
