@@ -20,6 +20,7 @@
   "dependencies": {
     "@claudenomics/attestation": "workspace:*",
     "@claudenomics/auth": "workspace:*",
+    "@claudenomics/jobs": "workspace:*",
     "@claudenomics/privy": "workspace:*",
     "@claudenomics/receipts": "workspace:*",
     "@claudenomics/leagues": "workspace:*",

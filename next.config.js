@@ -15,7 +15,7 @@ const CSP = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@claudenomics/attestation', '@claudenomics/auth', '@claudenomics/privy', '@claudenomics/receipts', '@claudenomics/store'],
+  transpilePackages: ['@claudenomics/attestation', '@claudenomics/auth', '@claudenomics/jobs', '@claudenomics/leagues', '@claudenomics/privy', '@claudenomics/receipts', '@claudenomics/store'],
   webpack: config => {
     config.resolve.extensionAlias = {
       ...(config.resolve.extensionAlias ?? {}),
