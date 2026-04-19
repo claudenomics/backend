@@ -34,7 +34,7 @@ export interface CreateSquadInput {
   captainUserId: string
   currentLeagueId?: string | null
   defaultInviteCode: string
-  twitter: SquadSocialBinding
+  twitter?: SquadSocialBinding
 }
 
 export interface CreateSquadInviteInput {

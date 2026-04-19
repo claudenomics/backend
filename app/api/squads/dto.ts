@@ -75,6 +75,7 @@ export function squadDto({ squad, memberships, users, socials, leagueSlug, invit
     bio: twitter?.bio ?? null,
     avatar_url: twitter?.avatarUrl ?? null,
     league: leagueSlug ?? DEFAULT_LEAGUE_SLUG,
+    verified: twitter !== null,
     captain: captainUser ? memberUserDto(captainUser) : null,
     members,
     member_count: members.length,

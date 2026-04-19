@@ -148,7 +148,7 @@ export async function createSquadWithCaptain(
   squad: SquadRow
   captainMembership: SquadMembershipRow
   defaultInvite: SquadInviteRow
-  twitterSocial: SquadSocialRow
+  twitterSocial: SquadSocialRow | null
 }> {
   return db.transaction(async tx => {
     const [squad] = await tx
@@ -163,19 +163,23 @@ export async function createSquadWithCaptain(
       .returning()
     if (!squad) throw new Error(`failed to create squad ${input.slug}`)
 
-    const [twitterSocial] = await tx
-      .insert(squadSocials)
-      .values({
-        squadId: squad.id,
-        provider: input.twitter.provider,
-        providerUserId: input.twitter.providerUserId,
-        handle: input.twitter.handle,
-        displayName: input.twitter.displayName ?? null,
-        bio: input.twitter.bio ?? null,
-        avatarUrl: input.twitter.avatarUrl ?? null,
-      })
-      .returning()
-    if (!twitterSocial) throw new Error(`failed to bind twitter social for squad ${input.slug}`)
+    let twitterSocial: SquadSocialRow | null = null
+    if (input.twitter) {
+      const [row] = await tx
+        .insert(squadSocials)
+        .values({
+          squadId: squad.id,
+          provider: input.twitter.provider,
+          providerUserId: input.twitter.providerUserId,
+          handle: input.twitter.handle,
+          displayName: input.twitter.displayName ?? null,
+          bio: input.twitter.bio ?? null,
+          avatarUrl: input.twitter.avatarUrl ?? null,
+        })
+        .returning()
+      if (!row) throw new Error(`failed to bind twitter social for squad ${input.slug}`)
+      twitterSocial = row
+    }
 
     const [defaultInvite] = await tx
       .insert(squadInvites)
