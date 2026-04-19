@@ -243,3 +243,25 @@ export async function sessionMsForSquad(
   const map = await sessionMsBySquads([squadId], since, gapMs, floorMs)
   return map.get(squadId) ?? 0
 }
+
+export interface DailyBurn {
+  date: string
+  tokens: number
+}
+
+export async function dailyBurnByWallet(
+  wallet: string,
+  since: number,
+): Promise<DailyBurn[]> {
+  const dayExpr = sql<string>`to_char(to_timestamp(${receipts.ts} / 1000.0) AT TIME ZONE 'UTC', 'YYYY-MM-DD')`
+  const rows = await db
+    .select({
+      date: dayExpr,
+      tokens: sql<string>`COALESCE(SUM(${receipts.inputTokens} + ${receipts.outputTokens}), 0)`,
+    })
+    .from(receipts)
+    .where(and(eq(receipts.wallet, wallet), gte(receipts.ts, since)))
+    .groupBy(dayExpr)
+    .orderBy(asc(dayExpr))
+  return rows.map(r => ({ date: r.date, tokens: Number(r.tokens) }))
+}
