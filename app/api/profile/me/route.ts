@@ -1,6 +1,6 @@
 import { errorResponse, profilePatchBodySchema, reqLogger } from '@claudenomics/auth'
 import { getLeagueById, getLeagueProgress } from '@claudenomics/leagues'
-import { getTotals } from '@claudenomics/receipts'
+import { rankByWallet } from '@claudenomics/receipts'
 import { hit } from '@claudenomics/store'
 import {
   ensureUser,
@@ -10,7 +10,8 @@ import {
 } from '@claudenomics/users'
 import { randomUUID } from 'node:crypto'
 import { authed } from '@/app/lib/request'
-import { meProfileDto } from '../dto.js'
+import { meProfileDto, type ProfileStanding } from '../dto.js'
+import type { UserRow } from '@claudenomics/users'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,6 +20,12 @@ async function resolveLeagueSlug(currentLeagueId: string | null): Promise<string
   if (!currentLeagueId) return null
   const league = await getLeagueById(currentLeagueId)
   return league?.slug ?? null
+}
+
+async function resolveStanding(user: UserRow): Promise<ProfileStanding> {
+  const ranking = await rankByWallet(user.wallet)
+  const progress = await getLeagueProgress(ranking.tokens, user.currentLeagueId)
+  return { rank: ranking.rank, totalBuilders: ranking.total, progress }
 }
 
 export async function GET(req: Request) {
@@ -37,12 +44,8 @@ export async function GET(req: Request) {
     })
     const socials = await getSocialAccountsByUserId(user.id)
     const leagueSlug = await resolveLeagueSlug(user.currentLeagueId)
-    const totals = await getTotals(user.wallet)
-    const progress = await getLeagueProgress(
-      totals.input_tokens + totals.output_tokens,
-      user.currentLeagueId,
-    )
-    return Response.json(meProfileDto(user, socials, leagueSlug, progress))
+    const standing = await resolveStanding(user)
+    return Response.json(meProfileDto(user, socials, leagueSlug, standing))
   } catch (err) {
     if (err instanceof UserConflictError) return errorResponse('wallet_conflict')
     log.error({ event: 'profile_me_failed' })
@@ -80,12 +83,8 @@ export async function PATCH(req: Request) {
     })
     const socials = await getSocialAccountsByUserId(updated.id)
     const leagueSlug = await resolveLeagueSlug(updated.currentLeagueId)
-    const totals = await getTotals(updated.wallet)
-    const progress = await getLeagueProgress(
-      totals.input_tokens + totals.output_tokens,
-      updated.currentLeagueId,
-    )
-    return Response.json(meProfileDto(updated, socials, leagueSlug, progress))
+    const standing = await resolveStanding(updated)
+    return Response.json(meProfileDto(updated, socials, leagueSlug, standing))
   } catch (err) {
     if (err instanceof UserConflictError) return errorResponse('wallet_conflict')
     log.error({ event: 'profile_patch_failed' })
