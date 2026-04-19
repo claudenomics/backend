@@ -26,6 +26,7 @@ export interface RankingParams {
 }
 
 const burnExpr = sql<string>`SUM(${receipts.inputTokens} + ${receipts.outputTokens})`
+const coalescedBurnExpr = sql<string>`COALESCE(SUM(${receipts.inputTokens} + ${receipts.outputTokens}), 0)`
 
 export function escapeLike(input: string): string {
   return input.replace(/[\\%_]/g, '\\$&')
@@ -43,14 +44,19 @@ function builderConditions(p: RankingParams): SQL | undefined {
   return parts.length > 0 ? and(...parts) : undefined
 }
 
-function squadConditions(p: RankingParams): SQL | undefined {
+function squadFilters(p: RankingParams): SQL | undefined {
   const parts: SQL[] = []
-  if (p.since !== undefined) parts.push(gte(receipts.ts, p.since))
   if (p.leagueId) parts.push(eq(squads.currentLeagueId, p.leagueId))
   if (p.searchLike) {
     parts.push(sql`(${squads.slug} ILIKE ${p.searchLike} OR ${squads.name} ILIKE ${p.searchLike})`)
   }
   return parts.length > 0 ? and(...parts) : undefined
+}
+
+function squadReceiptsJoin(p: RankingParams): SQL {
+  const base = eq(squads.id, receipts.attributedSquadId)
+  if (p.since === undefined) return base
+  return and(base, gte(receipts.ts, p.since))!
 }
 
 export async function rankBuilders(
@@ -93,27 +99,27 @@ export async function rankBuilders(
 export async function rankSquads(
   p: RankingParams,
 ): Promise<{ rows: SquadRankingRow[]; total: number }> {
-  const whereExpr = squadConditions(p)
+  const whereExpr = squadFilters(p)
+  const joinCondition = squadReceiptsJoin(p)
 
   const rows = await db
     .select({
       squadId: squads.id,
       inputTokens: sql<string>`COALESCE(SUM(${receipts.inputTokens}), 0)`,
       outputTokens: sql<string>`COALESCE(SUM(${receipts.outputTokens}), 0)`,
-      receiptCount: sql<string>`COUNT(*)`,
+      receiptCount: sql<string>`COUNT(${receipts.responseId})`,
     })
-    .from(receipts)
-    .innerJoin(squads, eq(squads.id, receipts.attributedSquadId))
+    .from(squads)
+    .leftJoin(receipts, joinCondition)
     .where(whereExpr)
     .groupBy(squads.id)
-    .orderBy(desc(burnExpr), asc(squads.id))
+    .orderBy(desc(coalescedBurnExpr), asc(squads.id))
     .limit(p.pageSize)
     .offset((p.page - 1) * p.pageSize)
 
   const [countRow] = await db
-    .select({ count: sql<string>`COUNT(DISTINCT ${squads.id})` })
-    .from(receipts)
-    .innerJoin(squads, eq(squads.id, receipts.attributedSquadId))
+    .select({ count: sql<string>`COUNT(*)` })
+    .from(squads)
     .where(whereExpr)
 
   return {
