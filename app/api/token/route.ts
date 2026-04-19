@@ -7,6 +7,7 @@ import {
   verifyChallenge,
 } from '@claudenomics/auth'
 import { clientIp, consume, hit, refreshTokenStore } from '@claudenomics/store'
+import { ensureUser, UserConflictError } from '@claudenomics/users'
 import { randomUUID } from 'node:crypto'
 
 export const runtime = 'nodejs'
@@ -51,6 +52,11 @@ export async function POST(req: Request) {
       wallet: row.wallet,
       email: row.email,
     })
+    await ensureUser({
+      privyDid: row.privyDid,
+      wallet: row.wallet,
+      email: row.email,
+    })
     log.info({ event: 'token_issued', sub: row.privyDid })
     return Response.json({
       token,
@@ -61,7 +67,11 @@ export async function POST(req: Request) {
       user_id: row.privyDid,
       email: row.email ?? undefined,
     })
-  } catch {
+  } catch (err) {
+    if (err instanceof UserConflictError) {
+      log.warn({ event: 'token_user_conflict', sub: row.privyDid, wallet: row.wallet })
+      return errorResponse('wallet_conflict')
+    }
     log.error({ event: 'sign_failed' })
     return errorResponse('internal')
   }

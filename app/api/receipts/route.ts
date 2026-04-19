@@ -5,7 +5,9 @@ import {
   signedReceiptSchema,
   verifySignature,
 } from '@claudenomics/receipts'
+import { getActivePrimarySquadMembershipByUserId } from '@claudenomics/squads'
 import { hit } from '@claudenomics/store'
+import { getUserByWallet } from '@claudenomics/users'
 import { randomUUID } from 'node:crypto'
 
 export const runtime = 'nodejs'
@@ -89,11 +91,23 @@ export async function POST(req: Request) {
     return errorResponse('invalid_signature')
   }
 
+  let attributedSquadId: string | null = null
   try {
-    const { inserted } = await insertReceipt(signed)
+    const user = await getUserByWallet(signed.receipt.wallet)
+    if (user) {
+      const primary = await getActivePrimarySquadMembershipByUserId(user.id)
+      attributedSquadId = primary?.squadId ?? null
+    }
+  } catch {
+    // best-effort attribution; fall back to null if lookup fails
+  }
+
+  try {
+    const { inserted } = await insertReceipt(signed, attributedSquadId)
     log.info({
       event: inserted ? 'receipt_accepted' : 'receipt_duplicate',
       responseId: signed.receipt.response_id,
+      attributedSquadId,
     })
     return Response.json({ status: inserted ? 'accepted' : 'duplicate' })
   } catch (err) {
