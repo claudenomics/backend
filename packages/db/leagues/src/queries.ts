@@ -128,3 +128,74 @@ export async function recomputeAllLeagues(): Promise<{ users: number; squads: nu
   const squads = await recomputeSquadLeagues()
   return { users, squads }
 }
+
+export type LeagueProgress = {
+  currentTokens: number
+  nextSlug: string | null
+  nextRank: number | null
+  requiredTokens: number | null
+  tokensToNext: number | null
+}
+
+// Raw SQL because percentile_cont + nested CTE scalar lookups don't have
+// clean drizzle-builder equivalents. Returns the next-tier token cutoff
+// (max of its percentile cutoff and its min_tokens floor) plus the user's
+// current total.
+export async function getLeagueProgress(userId: string): Promise<LeagueProgress> {
+  const result = await db.execute(sql`
+    WITH totals AS (
+      SELECT u.id AS user_id,
+             COALESCE(wt.input_tokens + wt.output_tokens, 0) AS tokens
+      FROM users u
+      LEFT JOIN wallet_totals wt ON wt.wallet = u.wallet
+    ),
+    me AS (SELECT tokens FROM totals WHERE user_id = ${userId}),
+    cur_rank AS (
+      SELECT COALESCE(l.rank, 0) AS rank
+      FROM users u
+      LEFT JOIN leagues l ON l.id = u.current_league_id
+      WHERE u.id = ${userId}
+    ),
+    next_tier AS (
+      SELECT slug, rank, max_percentile, min_tokens
+      FROM leagues
+      WHERE rank > (SELECT rank FROM cur_rank)
+      ORDER BY rank ASC
+      LIMIT 1
+    ),
+    cutoff AS (
+      SELECT percentile_cont((SELECT max_percentile FROM next_tier))
+               WITHIN GROUP (ORDER BY tokens DESC) AS cut
+      FROM totals
+      WHERE (SELECT max_percentile FROM next_tier) IS NOT NULL
+    )
+    SELECT
+      COALESCE((SELECT tokens FROM me), 0)::bigint AS current_tokens,
+      (SELECT slug FROM next_tier) AS next_slug,
+      (SELECT rank FROM next_tier) AS next_rank,
+      CASE
+        WHEN (SELECT slug FROM next_tier) IS NULL THEN NULL
+        ELSE GREATEST(
+          (SELECT min_tokens FROM next_tier),
+          COALESCE((SELECT cut FROM cutoff)::bigint, 0)
+        )::bigint
+      END AS required_tokens
+  `)
+  const row = result.rows?.[0] as
+    | { current_tokens: string | number; next_slug: string | null; next_rank: number | null; required_tokens: string | number | null }
+    | undefined
+  if (!row) {
+    return { currentTokens: 0, nextSlug: null, nextRank: null, requiredTokens: null, tokensToNext: null }
+  }
+  const currentTokens = Number(row.current_tokens) || 0
+  const requiredTokens = row.required_tokens == null ? null : Number(row.required_tokens)
+  const tokensToNext =
+    requiredTokens == null ? null : Math.max(0, requiredTokens - currentTokens)
+  return {
+    currentTokens,
+    nextSlug: row.next_slug,
+    nextRank: row.next_rank,
+    requiredTokens,
+    tokensToNext,
+  }
+}
