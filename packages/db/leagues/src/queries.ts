@@ -19,7 +19,7 @@ export async function listLeagues(): Promise<LeagueRow[]> {
 }
 
 export const DEFAULT_LEAGUES = [
-  { slug: 'bronze', name: 'Bronze', rank: 1, maxPercentile: 1.0, minTokens: 1_000_000 },
+  { slug: 'bronze', name: 'Bronze', rank: 1, maxPercentile: 1.0, minTokens: 0 },
   { slug: 'silver', name: 'Silver', rank: 2, maxPercentile: 0.5, minTokens: 20_000_000 },
   { slug: 'gold', name: 'Gold', rank: 3, maxPercentile: 0.25, minTokens: 200_000_000 },
   { slug: 'platinum', name: 'Platinum', rank: 4, maxPercentile: 0.1, minTokens: 1_000_000_000 },
