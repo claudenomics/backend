@@ -5,6 +5,7 @@ export type ErrorCode =
   | 'state_mismatch'
   | 'verifier_mismatch'
   | 'wallet_unavailable'
+  | 'wallet_conflict'
   | 'wallet_mismatch'
   | 'privy_unavailable'
   | 'unauthorized'
@@ -20,6 +21,14 @@ export type ErrorCode =
   | 'non_production_receipt'
   | 'rate_limited'
   | 'not_implemented'
+  | 'not_found'
+  | 'forbidden'
+  | 'slug_taken'
+  | 'captain_cannot_leave'
+  | 'squad_invite_unavailable'
+  | 'oauth_state_invalid'
+  | 'oauth_denied'
+  | 'oauth_upstream_failed'
   | 'internal'
 
 const STATUS: Record<ErrorCode, number> = {
@@ -29,6 +38,7 @@ const STATUS: Record<ErrorCode, number> = {
   state_mismatch: 401,
   verifier_mismatch: 401,
   wallet_unavailable: 401,
+  wallet_conflict: 409,
   wallet_mismatch: 403,
   privy_unavailable: 503,
   unauthorized: 401,
@@ -44,6 +54,14 @@ const STATUS: Record<ErrorCode, number> = {
   non_production_receipt: 403,
   rate_limited: 429,
   not_implemented: 501,
+  not_found: 404,
+  forbidden: 403,
+  slug_taken: 409,
+  captain_cannot_leave: 409,
+  squad_invite_unavailable: 410,
+  oauth_state_invalid: 400,
+  oauth_denied: 401,
+  oauth_upstream_failed: 502,
   internal: 500,
 }
 
