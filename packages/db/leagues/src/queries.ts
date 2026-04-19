@@ -1,4 +1,4 @@
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, eq, gt, sql } from 'drizzle-orm'
 import { randomUUID } from 'node:crypto'
 import { db } from '@claudenomics/store'
 import { leagues } from './schema.js'
@@ -137,64 +137,55 @@ export type LeagueProgress = {
   tokensToNext: number | null
 }
 
-// Raw SQL because percentile_cont + nested CTE scalar lookups don't have
-// clean drizzle-builder equivalents. Returns the next-tier token cutoff
-// (max of its percentile cutoff and its min_tokens floor) plus the user's
-// current total.
-export async function getLeagueProgress(userId: string): Promise<LeagueProgress> {
-  const result = await db.execute(sql`
-    WITH totals AS (
-      SELECT u.id AS user_id,
-             COALESCE(wt.input_tokens + wt.output_tokens, 0) AS tokens
-      FROM users u
-      LEFT JOIN wallet_totals wt ON wt.wallet = u.wallet
-    ),
-    me AS (SELECT tokens FROM totals WHERE user_id = ${userId}),
-    cur_rank AS (
-      SELECT COALESCE(l.rank, 0) AS rank
-      FROM users u
-      LEFT JOIN leagues l ON l.id = u.current_league_id
-      WHERE u.id = ${userId}
-    ),
-    next_tier AS (
-      SELECT slug, rank, max_percentile, min_tokens
-      FROM leagues
-      WHERE rank > (SELECT rank FROM cur_rank)
-      ORDER BY rank ASC
-      LIMIT 1
-    ),
-    cutoff AS (
-      SELECT percentile_cont((SELECT max_percentile FROM next_tier))
-               WITHIN GROUP (ORDER BY tokens DESC) AS cut
-      FROM totals
-      WHERE (SELECT max_percentile FROM next_tier) IS NOT NULL
-    )
-    SELECT
-      COALESCE((SELECT tokens FROM me), 0)::bigint AS current_tokens,
-      (SELECT slug FROM next_tier) AS next_slug,
-      (SELECT rank FROM next_tier) AS next_rank,
-      CASE
-        WHEN (SELECT slug FROM next_tier) IS NULL THEN NULL
-        ELSE GREATEST(
-          (SELECT min_tokens FROM next_tier),
-          COALESCE((SELECT cut FROM cutoff)::bigint, 0)
-        )::bigint
-      END AS required_tokens
-  `)
-  const row = result.rows?.[0] as
-    | { current_tokens: string | number; next_slug: string | null; next_rank: number | null; required_tokens: string | number | null }
-    | undefined
-  if (!row) {
-    return { currentTokens: 0, nextSlug: null, nextRank: null, requiredTokens: null, tokensToNext: null }
+export async function getLeagueProgress(
+  userTokens: number,
+  currentLeagueId: string | null,
+): Promise<LeagueProgress> {
+  let currentRank = 0
+  if (currentLeagueId) {
+    const [cur] = await db
+      .select({ rank: leagues.rank })
+      .from(leagues)
+      .where(eq(leagues.id, currentLeagueId))
+      .limit(1)
+    currentRank = cur?.rank ?? 0
   }
-  const currentTokens = Number(row.current_tokens) || 0
-  const requiredTokens = row.required_tokens == null ? null : Number(row.required_tokens)
-  const tokensToNext =
-    requiredTokens == null ? null : Math.max(0, requiredTokens - currentTokens)
+
+  const [nextTier] = await db
+    .select()
+    .from(leagues)
+    .where(gt(leagues.rank, currentRank))
+    .orderBy(asc(leagues.rank))
+    .limit(1)
+
+  if (!nextTier) {
+    return {
+      currentTokens: userTokens,
+      nextSlug: null,
+      nextRank: null,
+      requiredTokens: null,
+      tokensToNext: null,
+    }
+  }
+
+  // percentile_cont has no drizzle builder helper; and this package can't
+  // import the users table without creating a dep cycle (users depends on
+  // leagues). So this one scalar stays raw.
+  const cutoffResult = await db.execute(sql`
+    SELECT percentile_cont(${nextTier.maxPercentile})
+             WITHIN GROUP (ORDER BY COALESCE(wt.input_tokens + wt.output_tokens, 0) DESC) AS cut
+    FROM users u LEFT JOIN wallet_totals wt ON wt.wallet = u.wallet
+  `)
+  const cutoffRaw = (cutoffResult.rows?.[0] as { cut: unknown } | undefined)?.cut
+  const cutoff = cutoffRaw == null ? 0 : Math.round(Number(cutoffRaw))
+
+  const requiredTokens = Math.max(nextTier.minTokens, cutoff)
+  const tokensToNext = Math.max(0, requiredTokens - userTokens)
+
   return {
-    currentTokens,
-    nextSlug: row.next_slug,
-    nextRank: row.next_rank,
+    currentTokens: userTokens,
+    nextSlug: nextTier.slug,
+    nextRank: nextTier.rank,
     requiredTokens,
     tokensToNext,
   }

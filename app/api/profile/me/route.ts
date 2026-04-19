@@ -1,5 +1,6 @@
 import { errorResponse, profilePatchBodySchema, reqLogger } from '@claudenomics/auth'
 import { getLeagueById, getLeagueProgress } from '@claudenomics/leagues'
+import { getTotals } from '@claudenomics/receipts'
 import { hit } from '@claudenomics/store'
 import {
   ensureUser,
@@ -36,7 +37,11 @@ export async function GET(req: Request) {
     })
     const socials = await getSocialAccountsByUserId(user.id)
     const leagueSlug = await resolveLeagueSlug(user.currentLeagueId)
-    const progress = await getLeagueProgress(user.id)
+    const totals = await getTotals(user.wallet)
+    const progress = await getLeagueProgress(
+      totals.input_tokens + totals.output_tokens,
+      user.currentLeagueId,
+    )
     return Response.json(meProfileDto(user, socials, leagueSlug, progress))
   } catch (err) {
     if (err instanceof UserConflictError) return errorResponse('wallet_conflict')
@@ -75,7 +80,11 @@ export async function PATCH(req: Request) {
     })
     const socials = await getSocialAccountsByUserId(updated.id)
     const leagueSlug = await resolveLeagueSlug(updated.currentLeagueId)
-    const progress = await getLeagueProgress(updated.id)
+    const totals = await getTotals(updated.wallet)
+    const progress = await getLeagueProgress(
+      totals.input_tokens + totals.output_tokens,
+      updated.currentLeagueId,
+    )
     return Response.json(meProfileDto(updated, socials, leagueSlug, progress))
   } catch (err) {
     if (err instanceof UserConflictError) return errorResponse('wallet_conflict')
