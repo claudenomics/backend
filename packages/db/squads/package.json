@@ -1,0 +1,16 @@
+{
+  "name": "@claudenomics/squads",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "dependencies": {
+    "@claudenomics/leagues": "workspace:*",
+    "@claudenomics/store": "workspace:*",
+    "@claudenomics/users": "workspace:*",
+    "drizzle-orm": "^0.36.4"
+  }
+}
